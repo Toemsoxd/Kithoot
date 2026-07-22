@@ -1,0 +1,13 @@
+{
+  "name": "kithoot",
+  "version": "1.0.0",
+  "description": "Cliente ultra ligero de Kahoot para Android 4.4 Kitkat",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "kahoot.js-updated": "^2.3.0"
+  }
+}
