@@ -1,5 +1,5 @@
 const express = require('express');
-const Kahoot = require('kahoot.js-v2');
+const Kahoot = require('kahoot.js-latest');
 
 const app = express();
 const client = new Kahoot();
