@@ -11,6 +11,6 @@
   },
   "dependencies": {
     "express": "^4.18.2",
-    "kahoot.js-updated": "^2.6.1"
+    "kahoot.js-updated": "*"
   }
 }
