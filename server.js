@@ -1,21 +1,16 @@
 const express = require('express');
-const Kahoot = require('kahoot.js-latest');
+const Kahoot = require('kahoot.js-updated'); // Usamos la versión mantenida
 
 const app = express();
-// Se recomienda instanciar un cliente por usuario/sesión si se van a conectar múltiples bots
-const client = new Kahoot();
 
 app.use(express.json());
 app.use(express.static('public'));
 
-// Prevenir caídas por errores no capturados en el proceso
+// Guardaremos la instancia activa de la sesión
+let activeClient = null;
+
 process.on('uncaughtException', (err) => {
     console.error('Error interno capturado:', err.message);
-});
-
-// Listener de errores globales del cliente de Kahoot
-client.on("Disconnect", (reason) => {
-    console.log("Desconectado de Kahoot:", reason);
 });
 
 // Endpoint para unirte a la partida
@@ -26,44 +21,59 @@ app.post('/join', async (req, res) => {
         return res.status(400).json({ error: "Falta el PIN o el apodo" });
     }
 
-    // Asegurar que el PIN sea un número entero válido
     const numericPin = parseInt(pin, 10);
     if (isNaN(numericPin)) {
         return res.status(400).json({ error: "El PIN debe ser un número válido." });
     }
 
     try {
+        // Creamos un cliente FRESCO para cada intento de conexión
+        const client = new Kahoot();
+        
+        client.on("Disconnect", (reason) => {
+            console.log("Desconectado de Kahoot:", reason);
+        });
+
+        client.on("QuestionStart", (question) => {
+            console.log("¡Nueva pregunta iniciada!");
+        });
+
+        // Intentamos la conexión
         await client.join(numericPin, String(name));
+        
+        // Guardamos la sesión exitosa
+        activeClient = client;
+
+        console.log(`¡Bot '${name}' conectado con éxito al PIN ${numericPin}!`);
         res.json({ success: true, message: "¡Conectado exitosamente!" });
+
     } catch (err) {
-        console.error("Error al unirse a Kahoot:", err);
+        console.error("Error DETALLADO al unirse a Kahoot:", err);
         res.status(400).json({ 
-            error: "No se pudo conectar a Kahoot. Revisa que el PIN sea correcto y que la partida esté abierta." 
+            error: "No se pudo conectar a Kahoot. Revisa el PIN o los logs del servidor." 
         });
     }
-});
-
-// Listener cuando empieza una pregunta
-client.on("QuestionStart", (question) => {
-    console.log("¡Nueva pregunta iniciada!");
 });
 
 // Endpoint para enviar la respuesta desde la tablet
 app.post('/answer', (req, res) => {
     const { choice } = req.body;
     
+    if (!activeClient) {
+        return res.status(400).json({ error: "No hay ninguna sesión activa de Kahoot." });
+    }
+
     try {
-        if (client.quiz && client.quiz.currentQuestion) {
-            client.quiz.currentQuestion.answer(Number(choice));
+        if (activeClient.quiz && activeClient.quiz.currentQuestion) {
+            activeClient.quiz.currentQuestion.answer(Number(choice));
             res.json({ success: true });
         } else {
-            // Intento de envío directo a la pregunta activa
-            client.answer(Number(choice));
+            activeClient.answer(Number(choice));
             res.json({ success: true });
         }
     } catch (e) {
         console.error("Error al responder:", e.message);
-        res.status(400).json({ error: "No hay pregunta activa o error al responder" });
+        res.status(400).json({ error: "Error al enviar respuesta." });
     }
 });
 
