@@ -5,89 +5,206 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kithoot</title>
     
-    <!-- FAVICON .ICO TRADICIONAL -->
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
 
-    <!-- Metadatos de WebApp pantalla completa -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Kithoot">
 
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-        body, html { height: 100%; width: 100%; background: #111; overflow: hidden; -webkit-tap-highlight-color: transparent; }
-        
-        #login-screen {
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            height: 100%; color: white; gap: 15px; padding: 20px;
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
         }
-        #login-screen h2 { font-size: 2.2rem; color: #f2f2f2; }
-        input, button.btn-join {
-            padding: 15px; font-size: 1.2rem; border-radius: 8px; border: none; width: 100%; max-width: 300px;
+        
+        body, html { 
+            height: 100%; 
+            width: 100%; 
+            background: #46178f; 
+            overflow: hidden; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        /* PANTALLA DE LOGIN */
+        #login-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            padding: 20px;
+        }
+
+        .card-login {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 28px 24px;
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #46178f;
+            letter-spacing: -1px;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 16px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s;
             -webkit-appearance: none;
         }
-        input { background: #fff; color: #333; }
-        button.btn-join { background: #46178f; color: white; font-weight: bold; cursor: pointer; }
-        button.btn-join:active { background: #331169; }
 
-        #game-screen {
-            display: none; height: 100vh; width: 100vw;
-            grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+        input:focus {
+            border-color: #46178f;
         }
-        .btn-answer { border: none; font-size: 3.5rem; color: white; outline: none; cursor: pointer; -webkit-appearance: none; }
-        .red { background: #e21b3c; }
-        .blue { background: #1368ce; }
-        .yellow { background: #d89e00; }
-        .green { background: #26890c; }
-        
-        .btn-answer:active { opacity: 0.7; }
+
+        .btn-join {
+            width: 100%;
+            padding: 16px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #ffffff;
+            background: #333333;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 4px 0 #111111;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+            -webkit-appearance: none;
+        }
+
+        .btn-join:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #111111;
+        }
+
+        /* PANTALLA DE JUEGO (BOTONES EN GRID) */
+        #game-screen {
+            display: none;
+            height: 100vh;
+            width: 100vw;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 12px;
+            padding: 12px;
+            background: #121212;
+        }
+
+        .btn-answer {
+            border: none;
+            border-radius: 12px;
+            font-size: 4.5rem;
+            color: white;
+            outline: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.08s ease, filter 0.1s;
+            -webkit-appearance: none;
+        }
+
+        /* Colores Oficiales con Sombra 3D */
+        .red    { background: #e21b3c; box-shadow: inset 0 -8px 0 rgba(0,0,0,0.25); }
+        .blue   { background: #1368ce; box-shadow: inset 0 -8px 0 rgba(0,0,0,0.25); }
+        .yellow { background: #d89e00; box-shadow: inset 0 -8px 0 rgba(0,0,0,0.25); }
+        .green  { background: #26890c; box-shadow: inset 0 -8px 0 rgba(0,0,0,0.25); }
+
+        .btn-answer:active {
+            transform: scale(0.96);
+            filter: brightness(0.85);
+            box-shadow: inset 0 -2px 0 rgba(0,0,0,0.25);
+        }
+
+        /* Feedback visual cuando envías respuesta */
+        .selected {
+            outline: 6px solid #ffffff !important;
+            filter: brightness(1.1);
+        }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
-        <h2>Kithoot</h2>
-        <input type="number" id="pin" placeholder="Game PIN" pattern="[0-9]*" inputmode="numeric">
-        <input type="text" id="nickname" placeholder="Apodo" maxlength="15">
-        <button class="btn-join" onclick="joinGame()">ENTRAR</button>
+        <div class="card-login">
+            <h1 class="logo">Kithoot</h1>
+            <input type="number" id="pin" placeholder="PIN del juego" pattern="[0-9]*" inputmode="numeric">
+            <input type="text" id="nickname" placeholder="Tu Apodo" maxlength="15">
+            <button class="btn-join" onclick="joinGame()">Ingresar</button>
+        </div>
     </div>
 
     <div id="game-screen">
-        <button class="btn-answer red" onclick="sendAnswer(0)">▲</button>
-        <button class="btn-answer blue" onclick="sendAnswer(1)">◆</button>
-        <button class="btn-answer yellow" onclick="sendAnswer(2)">●</button>
-        <button class="btn-answer green" onclick="sendAnswer(3)">■</button>
+        <button class="btn-answer red" onclick="sendAnswer(0, this)">▲</button>
+        <button class="btn-answer blue" onclick="sendAnswer(1, this)">◆</button>
+        <button class="btn-answer yellow" onclick="sendAnswer(2, this)">●</button>
+        <button class="btn-answer green" onclick="sendAnswer(3, this)">■</button>
     </div>
 
     <script>
-        function joinGame() {
-            var pinVal = document.getElementById('pin').value;
-            var nickVal = document.getElementById('nickname').value;
+        async function joinGame() {
+            var pinInput = document.getElementById('pin').value.trim();
+            var nickInput = document.getElementById('nickname').value.trim();
 
-            if(!pinVal || !nickVal) { alert("Llena ambos campos, mano."); return; }
+            if (!pinInput || !nickInput) {
+                alert("Por favor pon el PIN y tu Apodo.");
+                return;
+            }
 
-            var xhr = new XMLHttpRequest();
-            xhr.open("POST", "/join", true);
-            xhr.setRequestHeader("Content-Type", "application/json");
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        document.getElementById('login-screen').style.display = 'none';
-                        document.getElementById('game-screen').style.display = 'grid';
-                    } else {
-                        var response = JSON.parse(xhr.responseText);
-                        alert("Error: " + (response.error || "PIN inválido."));
-                    }
+            try {
+                var response = await fetch('/join', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin: parseInt(pinInput, 10), name: nickInput })
+                });
+
+                var data = await response.json();
+
+                if (response.ok && data.success) {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('game-screen').style.display = 'grid';
+                } else {
+                    alert("Error: " + (data.error || "No se pudo conectar al Kahoot."));
                 }
-            };
-            xhr.send(JSON.stringify({ pin: pinVal, name: nickVal }));
+            } catch (err) {
+                console.error("Error en la petición:", err);
+                alert("Error de conexión con el servidor.");
+            }
         }
 
-        function sendAnswer(choice) {
-            var xhr = new XMLHttpRequest();
-            xhr.open("POST", "/answer", true);
-            xhr.setRequestHeader("Content-Type", "application/json");
-            xhr.send(JSON.stringify({ choice: choice }));
+        async function sendAnswer(choice, btnElement) {
+            // Animación rápida al tocar la opción
+            document.querySelectorAll('.btn-answer').forEach(b => b.classList.remove('selected'));
+            if(btnElement) btnElement.classList.add('selected');
+
+            try {
+                await fetch('/answer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ choice: parseInt(choice, 10) })
+                });
+            } catch (err) {
+                console.error("Error enviando respuesta:", err);
+            }
         }
     </script>
 </body>
