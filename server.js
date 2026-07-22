@@ -2,32 +2,45 @@ const express = require('express');
 const Kahoot = require('kahoot.js-latest');
 
 const app = express();
+// Se recomienda instanciar un cliente por usuario/sesión si se van a conectar múltiples bots
 const client = new Kahoot();
 
 app.use(express.json());
 app.use(express.static('public'));
 
-// Prevenir caídas por errores no capturados
+// Prevenir caídas por errores no capturados en el proceso
 process.on('uncaughtException', (err) => {
     console.error('Error interno capturado:', err.message);
 });
 
+// Listener de errores globales del cliente de Kahoot
+client.on("Disconnect", (reason) => {
+    console.log("Desconectado de Kahoot:", reason);
+});
+
 // Endpoint para unirte a la partida
-app.post('/join', (req, res) => {
-    const { pin, name } = req.body;
+app.post('/join', async (req, res) => {
+    let { pin, name } = req.body;
 
     if (!pin || !name) {
         return res.status(400).json({ error: "Falta el PIN o el apodo" });
     }
 
-    client.join(pin, name)
-        .then(() => {
-            res.json({ success: true, message: "¡Conectado exitosamente!" });
-        })
-        .catch(err => {
-            console.error("Error al unirse:", err);
-            res.status(400).json({ error: "No se pudo conectar a Kahoot. Revisa el PIN." });
+    // Asegurar que el PIN sea un número entero válido
+    const numericPin = parseInt(pin, 10);
+    if (isNaN(numericPin)) {
+        return res.status(400).json({ error: "El PIN debe ser un número válido." });
+    }
+
+    try {
+        await client.join(numericPin, String(name));
+        res.json({ success: true, message: "¡Conectado exitosamente!" });
+    } catch (err) {
+        console.error("Error al unirse a Kahoot:", err);
+        res.status(400).json({ 
+            error: "No se pudo conectar a Kahoot. Revisa que el PIN sea correcto y que la partida esté abierta." 
         });
+    }
 });
 
 // Listener cuando empieza una pregunta
@@ -41,11 +54,11 @@ app.post('/answer', (req, res) => {
     
     try {
         if (client.quiz && client.quiz.currentQuestion) {
-            client.quiz.currentQuestion.answer(choice);
+            client.quiz.currentQuestion.answer(Number(choice));
             res.json({ success: true });
         } else {
-            // Intento alternativo según estado
-            client.answer(choice);
+            // Intento de envío directo a la pregunta activa
+            client.answer(Number(choice));
             res.json({ success: true });
         }
     } catch (e) {
